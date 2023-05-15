@@ -10,10 +10,7 @@ class HomeManagement extends StatefulWidget {
 }
 
 class _HomeManagementState extends State<HomeManagement> {
-  final List<Widget> _pages = [
-    const placesMap(selectedIndex: 0),
-    const placesTable()
-  ];
+  final List<Widget> _pages = [const PlacesMap(), const placesTable()];
   int _index = 0;
 
   @override

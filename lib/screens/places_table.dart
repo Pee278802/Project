@@ -14,7 +14,6 @@ class placesTable extends StatefulWidget {
 }
 
 class _placesTableState extends State<placesTable> {
-  /// can do turn to turn
   late String searchQuery;
   List<Map<String, dynamic>> filteredPlaces = [];
 
@@ -68,59 +67,52 @@ class _placesTableState extends State<placesTable> {
       itemCount: filteredPlaces.length,
       itemBuilder: (BuildContext context, int index) {
         final place = filteredPlaces[index];
-        return Card(
-          clipBehavior: Clip.antiAlias,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CachedNetworkImage(
-                height: 175,
-                width: 140,
-                fit: BoxFit.cover,
-                imageUrl: place['image'],
-              ),
-              Expanded(
-                child: Container(
-                  height: 175,
-                  padding: const EdgeInsets.all(15),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        place['name'],
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                      Row(
-                        children: [
-                          // cardButtons(Icons.call, 'Call'),
-                          cardButtons(
-                            Icons.location_on,
-                            'Map', index,
-                            // ,
-                            // () {
-                            //   Navigator.push(
-                            //     context,
-                            //     MaterialPageRoute(
-                            //       builder: (context) => placesMap(
-                            //         selectedIndex: index,
-                            //       ),
-                            //     ),
-                            //   );
-                            // },
-                          ),
-                          const Spacer(),
-                          Text(
-                              '${(getDistanceFromSharedPrefs(index) / 1000).toStringAsFixed(2)}km'),
-                        ],
-                      )
-                    ],
+        return Container(
+          height: 160, // specify your desired height
+          width: 140, // specify your desired width
+          child: Card(
+            clipBehavior: Clip.antiAlias,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CachedNetworkImage(
+                  height: 175, // new height
+                  width: 140, // new width
+                  fit: BoxFit.cover,
+                  imageUrl: place['image'],
+                ),
+                Expanded(
+                  child: Container(
+                    height: 175,
+                    padding: const EdgeInsets.all(15),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          place['name'],
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        Row(
+                          children: [
+                            cardButtons(
+                              Icons.location_on,
+                              'Map',
+                              index,
+                            ),
+                            const Spacer(),
+                            Text(
+                                '${(getDistanceFromSharedPrefs(index) / 1000).toStringAsFixed(2)}km'),
+                          ],
+                        )
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -132,12 +124,12 @@ class _placesTableState extends State<placesTable> {
       padding: const EdgeInsets.only(right: 10),
       child: ElevatedButton(
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => placesMap(selectedIndex: index),
-            ),
-          );
+          // Navigator.push(
+          //   context,
+          //   MaterialPageRoute(
+          //     builder: (context) => PlacesMap(),
+          //   ),
+          // );
         },
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.all(5),

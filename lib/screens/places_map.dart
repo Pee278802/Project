@@ -2,40 +2,36 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
-import 'package:route_planner/constants/places.dart';
 import 'package:route_planner/helpers/commons.dart';
-import 'package:route_planner/helpers/shared_prefs.dart';
-import 'package:route_planner/widgets/carousel_card.dart';
 
-class placesMap extends StatefulWidget {
-  final int selectedIndex;
+import '../constants/places.dart';
+import '../helpers/shared_prefs.dart';
+import '../widgets/carousel_card.dart';
 
-  const placesMap({Key? key, required this.selectedIndex}) : super(key: key);
+class PlacesMap extends StatefulWidget {
+  const PlacesMap({Key? key}) : super(key: key);
 
   @override
-  State<placesMap> createState() => _placesMapState();
+  State<PlacesMap> createState() => _PlacesMapState();
 }
 
-class _placesMapState extends State<placesMap> {
+class _PlacesMapState extends State<PlacesMap> {
   // Mapbox related
   LatLng latLng = getLatLngFromSharedPrefs();
   late CameraPosition _initialCameraPosition;
   late MapboxMapController controller;
-  late List<CameraPosition> _kplaceList;
-
+  late List<CameraPosition> _kPlacesList;
   List<Map> carouselData = [];
 
   // Carousel related
   int pageIndex = 0;
+  bool accessed = false;
   late List<Widget> carouselItems;
 
   @override
   void initState() {
     super.initState();
-    _initialCameraPosition = CameraPosition(
-      target: getLatLngFromplaceData(widget.selectedIndex),
-      zoom: 15,
-    );
+    _initialCameraPosition = CameraPosition(target: latLng, zoom: 15);
 
     // Calculate the distance and time from data in SharedPreferences
     for (int index = 0; index < places.length; index++) {
@@ -53,7 +49,7 @@ class _placesMapState extends State<placesMap> {
             carouselData[index]['distance'], carouselData[index]['duration']));
 
     // initialize map symbols in the same order as carousel widgets
-    _kplaceList = List<CameraPosition>.generate(
+    _kPlacesList = List<CameraPosition>.generate(
         places.length,
         (index) => CameraPosition(
             target: getLatLngFromplaceData(carouselData[index]['index']),
@@ -63,7 +59,7 @@ class _placesMapState extends State<placesMap> {
   _addSourceAndLineLayer(int index, bool removeLayer) async {
     // Can animate camera to focus on the item
     controller
-        .animateCamera(CameraUpdate.newCameraPosition(_kplaceList[index]));
+        .animateCamera(CameraUpdate.newCameraPosition(_kPlacesList[index]));
 
     // Add a polyLine between source and destination
     Map geometry = getGeometryFromSharedPrefs(carouselData[index]['index']);
@@ -76,7 +72,7 @@ class _placesMapState extends State<placesMap> {
           "properties": <String, dynamic>{},
           "geometry": geometry,
         },
-      ]
+      ],
     };
 
     // Remove lineLayer and source if it exists
@@ -84,16 +80,19 @@ class _placesMapState extends State<placesMap> {
       await controller.removeLayer("lines");
       await controller.removeSource("fills");
     }
+
     // Add new source and lineLayer
     await controller.addSource("fills", GeojsonSourceProperties(data: _fills));
     await controller.addLineLayer(
-        "fills",
-        "lines",
-        LineLayerProperties(
-            lineColor: Colors.green.toHexStringRGB(),
-            lineCap: "round",
-            lineJoin: "round",
-            lineWidth: 2));
+      "fills",
+      "lines",
+      LineLayerProperties(
+        lineColor: Colors.green.toHexStringRGB(),
+        lineCap: "round",
+        lineJoin: "round",
+        lineWidth: 2,
+      ),
+    );
   }
 
   _onMapCreated(MapboxMapController controller) async {
@@ -101,11 +100,14 @@ class _placesMapState extends State<placesMap> {
   }
 
   _onStyleLoadedCallback() async {
-    for (CameraPosition _kplace in _kplaceList) {
-      await controller.addSymbol(SymbolOptions(
-          geometry: _kplace.target,
-          iconSize: 0.10,
-          iconImage: "assets/icon/dkg.png"));
+    for (CameraPosition _kRestaurant in _kPlacesList) {
+      await controller.addSymbol(
+        SymbolOptions(
+          geometry: _kRestaurant.target,
+          iconSize: 0.1,
+          iconImage: "assets/icon/dkg.png",
+        ),
+      );
     }
     _addSourceAndLineLayer(0, false);
   }
@@ -114,7 +116,7 @@ class _placesMapState extends State<placesMap> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ROUTE PLANNER UUM'),
+        title: const Text('Route Planner UUM'),
       ),
       body: SafeArea(
         child: Stack(
@@ -132,20 +134,22 @@ class _placesMapState extends State<placesMap> {
               ),
             ),
             CarouselSlider(
-                items: carouselItems,
-                options: CarouselOptions(
-                    height: 100,
-                    viewportFraction: 0.6,
-                    initialPage: 0,
-                    enableInfiniteScroll: false,
-                    scrollDirection: Axis.horizontal,
-                    onPageChanged:
-                        (int index, CarouselPageChangedReason reason) {
-                      setState(() {
-                        pageIndex = index;
-                      });
-                      _addSourceAndLineLayer(index, true);
-                    })),
+              items: carouselItems,
+              options: CarouselOptions(
+                height: 100,
+                viewportFraction: 0.6,
+                initialPage: 0,
+                enableInfiniteScroll: false,
+                scrollDirection: Axis.horizontal,
+                onPageChanged:
+                    (int index, CarouselPageChangedReason reason) async {
+                  setState(() {
+                    pageIndex = index;
+                  });
+                  _addSourceAndLineLayer(index, true);
+                },
+              ),
+            ),
           ],
         ),
       ),
@@ -159,9 +163,3 @@ class _placesMapState extends State<placesMap> {
     );
   }
 }
-
-
-
-
-// If later the route cannot be displayed properly, 
-// KINDLY CHANGE THE COORDINATE OF THE place!!
